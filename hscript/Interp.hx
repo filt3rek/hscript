@@ -25,6 +25,10 @@
 package hscript;
 import hscript.Expr;
 
+#if hscriptPos
+import hscript.Expr.ErrorDef in Error;
+#end
+
 private enum Stop {
 	SBreak;
 	SContinue;
@@ -104,7 +108,7 @@ class Interp {
 
 	function assign( e1 : Expr, e2 : Expr ) : Dynamic {
 		var v = expr(e2);
-		switch( e1 ) {
+		switch( #if !hscriptPos e1 #else e1.e #end ) {
 		case EIdent(id):
 			var l = locals.get(id);
 			if( l == null )
@@ -127,7 +131,7 @@ class Interp {
 
 	function evalAssignOp(op,fop,e1,e2) : Dynamic {
 		var v;
-		switch( e1 ) {
+		switch( #if !hscriptPos e1 #else e1.e #end ) {
 		case EIdent(id):
 			var l = locals.get(id);
 			v = fop(expr(e1),expr(e2));
@@ -151,7 +155,7 @@ class Interp {
 	}
 
 	function increment( e : Expr, prefix : Bool, delta : Int ) : Dynamic {
-		switch(e) {
+		switch(#if !hscriptPos e #else e.e #end) {
 		case EIdent(id):
 			var l = locals.get(id);
 			var v : Dynamic = (l == null) ? variables.get(id) : l.r;
@@ -182,7 +186,9 @@ class Interp {
 			return v;
 		default:
 			throw Error.EInvalidOp((delta > 0)?"++":"--");
+			return null;
 		}
+		return null;
 	}
 
 	public function execute( expr : Expr ) : Dynamic {
@@ -236,7 +242,7 @@ class Interp {
 	}
 
 	public function expr( e : Expr ) : Dynamic {
-		switch( e ) {
+		switch( #if !hscriptPos e #else e.e #end ) {
 		case EConst(c):
 			switch( c ) {
 			case CInt(v): return v;
@@ -290,7 +296,7 @@ class Interp {
 			var args = new Array();
 			for( p in params )
 				args.push(expr(p));
-			switch(e) {
+			switch(#if !hscriptPos e #else e.e #end) {
 			case EField(e,f):
 				var obj = expr(e);
 				if( obj == null ) throw Error.EInvalidAccess(f);
